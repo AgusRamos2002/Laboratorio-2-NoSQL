@@ -19,6 +19,14 @@ public class UsuarioController {
         usuarioRepository.save(usuario);
     }
 
+    @GetMapping("/{email}/{password}")
+    public LoginResponse autenticar(@PathVariable String email, @PathVariable String password){
+        Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
+        return LoginResponse.builder().successful(
+                optionalUsuario.map(usuario -> usuario.getPassword().equals(password)).orElse(false)
+        ).build();
+    }
+
     @PutMapping
     public void agregarRol(@RequestParam String email, @RequestParam String password, @RequestParam String rol){
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
@@ -29,7 +37,7 @@ public class UsuarioController {
 
         Usuario usuario = optionalUsuario.get();
 
-        if(!usuario.getPassword().equals(password)) {
+        if(!optionalUsuario.get().getPassword().equals(password)) {
             ResponseEntity.badRequest();
             throw new RuntimeException("Error Codigo 104: Constraseña incorrecta");
         }
