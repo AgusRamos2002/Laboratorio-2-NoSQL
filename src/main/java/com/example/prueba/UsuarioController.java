@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,17 +14,17 @@ public class UsuarioController {
 
     @Autowired
     UsuarioRepository usuarioRepository;
-/*
-    @GetMapping
+
+    @GetMapping("/codigos")
     public List<String> codigosError(){
-        List<String> errores = Collections.emptyList();
+        List<String> errores = new ArrayList<>();
         errores.add("Error 101: Usuario ya existente");
         errores.add("Error 102: Usuario no encontrado");
         errores.add("Error 103: No se ha encontrado el rol 'rol1'");
         errores.add("Error 104: La contraseña no coincide");
         return errores;
     }
-*/
+
     @PostMapping
     public void crear(@RequestBody Usuario usuario){
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(usuario.getEmail());
