@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -17,5 +18,5 @@ public class Usuario {
     String password;
     String nombre;
     String apellido;
-    Set<String> roles;
+    Set<String> roles = new HashSet<>();
 }
