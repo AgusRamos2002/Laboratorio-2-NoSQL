@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,8 +17,23 @@ public class UsuarioController {
     @Autowired
     UsuarioRepository usuarioRepository;
 
+    @GetMapping("/codigos")
+    public List<String> codigosError(){
+        List<String> errores = new ArrayList<>();
+        errores.add("Error 101: Usuario ya existente");
+        errores.add("Error 102: Usuario no encontrado");
+        errores.add("Error 103: No se ha encontrado el rol 'rol1'");
+        errores.add("Error 104: La contraseña no coincide");
+        return errores;
+    }
+
     @PostMapping
     public void crear(@RequestBody Usuario usuario){
+        Optional<Usuario> optionalUsuario = usuarioRepository.findById(usuario.getEmail());
+        if(!optionalUsuario.isEmpty()){
+            ResponseEntity.badRequest();
+            throw new RuntimeException("Error Codigo 101: Usuario ya existente");
+        }
         usuarioRepository.save(usuario);
     }
 
