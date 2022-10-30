@@ -1,11 +1,13 @@
 package com.example.prueba;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -29,6 +31,31 @@ public class UsuarioController {
 
     @PutMapping
     public void agregarRol(@RequestParam String email, @RequestParam String password, @RequestParam String rol){
+        Usuario usuario = getUsuario(email, password);
+
+        usuario.getRoles().add(rol);
+        usuarioRepository.save(usuario);
+    }
+
+    @PutMapping("/{email}")
+    public ResponseEntity<String> eliminarRolesUsuario(@RequestBody UsuarioEliminarRolDTO eliminarRolDTO){
+        Usuario usuario = getUsuario(eliminarRolDTO.getEmail(), eliminarRolDTO.getPassword());
+
+        for (String rol: eliminarRolDTO.getRoles())
+            if(!usuario.getRoles().contains(rol)) {
+            return ResponseEntity.badRequest().body("103: El usuario no contiene el ROL: " + rol);
+        }
+
+        usuario.getRoles().removeAll(eliminarRolDTO.getRoles());
+
+
+        usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok("Actualizado");
+    }
+
+
+    private Usuario getUsuario(String email, String password) {
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
         if(optionalUsuario.isEmpty()) {
             ResponseEntity.badRequest();
@@ -41,9 +68,8 @@ public class UsuarioController {
             ResponseEntity.badRequest();
             throw new RuntimeException("Error Codigo 104: Constraseña incorrecta");
         }
-
-        usuario.getRoles().add(rol);
-        usuarioRepository.save(usuario);
+        return usuario;
     }
+
 
 }
