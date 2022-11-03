@@ -1,14 +1,9 @@
 package com.example.prueba;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.ResponseErrorHandler;
-import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -98,6 +93,28 @@ public class UsuarioController {
             throw new RuntimeException("Error Codigo 104: Constraseña incorrecta");
         }
         return usuario;
+    }
+
+    @DeleteMapping("/eliminarUsuarios")
+    public ResponseEntity<String> eliminarUsuarios(){
+        if(usuarioRepository.count() == 0) {
+            return ResponseEntity.badRequest().body("La Base de Datos no tiene usuarios creados.");
+        } else {
+            usuarioRepository.deleteAll();
+            return ResponseEntity.ok().body("Se han eliminado todos los usuarios.");
+        }
+    }
+
+    @DeleteMapping("/{email}")
+    public ResponseEntity<String> eliminarUsuarioId(@PathVariable String email){
+        Optional<Usuario> usuario = usuarioRepository.findById(email);
+
+        if(usuario.isEmpty()) {
+            return ResponseEntity.badRequest().body("El usuario no existe.");
+        } else {
+            usuarioRepository.deleteById(email);
+            return ResponseEntity.ok().body("Se ha eliminado al usuario seleccionado.");
+        }
     }
 
 }
