@@ -14,9 +14,11 @@ public class UsuarioController {
 
     @Autowired
     UsuarioRepository usuarioRepository;
+    @Autowired
+    EquipoRepository equipoRepository;
 
     @GetMapping("/codigos")
-    public List<String> codigosError(){
+    public List<String> codigosError() {
         List<String> errores = new ArrayList<>();
         errores.add("Error 101: Usuario ya existente");
         errores.add("Error 102: Usuario no encontrado");
@@ -26,9 +28,9 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<String> crear(@RequestBody Usuario usuario){
+    public ResponseEntity<String> crear(@RequestBody Usuario usuario) {
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(usuario.getEmail());
-        if(optionalUsuario.isPresent()){
+        if (optionalUsuario.isPresent()) {
             return ResponseEntity.badRequest().body("Error Codigo 101: Usuario ya existente");
         }
         usuarioRepository.save(usuario);
@@ -36,7 +38,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{email}/{password}")
-    public LoginResponse autenticar(@PathVariable String email, @PathVariable String password){
+    public LoginResponse autenticar(@PathVariable String email, @PathVariable String password) {
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
         return LoginResponse.builder().successful(
                 optionalUsuario.map(usuario -> usuario.getPassword().equals(password)).orElse(false)
@@ -44,34 +46,28 @@ public class UsuarioController {
     }
 
     @PutMapping("/agregarRoles")
-    public ResponseEntity<String> agregarRol(@RequestBody UsuarioRolDTO agregarRolDTO){
+    public ResponseEntity<String> agregarRol(@RequestBody UsuarioRolDTO agregarRolDTO) {
         try {
             Usuario usuario = getUsuario(agregarRolDTO.getEmail(), agregarRolDTO.getPassword());
             usuario.getRoles().addAll(agregarRolDTO.getRoles());
             usuarioRepository.save(usuario);
-        }
-        catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
         return ResponseEntity.ok("Roles agregados con exito");
     }
 
     @PutMapping("/eliminarRoles")
-    public ResponseEntity<String> eliminarRolesUsuario(@RequestBody UsuarioRolDTO eliminarRolDTO){
+    public ResponseEntity<String> eliminarRolesUsuario(@RequestBody UsuarioRolDTO eliminarRolDTO) {
         Usuario usuario;
         try {
             usuario = getUsuario(eliminarRolDTO.getEmail(), eliminarRolDTO.getPassword());
 
-        }
-        catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-        //eliminarRolDTO.getRoles().forEach(rol -> {
-        //    if (!usuario.getRoles().contains(rol))
-        //        ResponseEntity.badRequest().body("103: El usuario no contiene el ROL: " + rol);
-        //});
 
-       for (String rol : eliminarRolDTO.getRoles())
+        for (String rol : eliminarRolDTO.getRoles())
             if (!usuario.getRoles().contains(rol))
                 return ResponseEntity.badRequest().body("103: El usuario no contiene el ROL: " + rol);
 
@@ -81,23 +77,23 @@ public class UsuarioController {
         return ResponseEntity.ok("Actualizado");
     }
 
-    private Usuario getUsuario(String email, String password) throws RuntimeException{
+    private Usuario getUsuario(String email, String password) throws RuntimeException {
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
-        if(optionalUsuario.isEmpty()) {
+        if (optionalUsuario.isEmpty()) {
             throw new RuntimeException("Error Codigo 102: Usuario no encontrado");
         }
 
         Usuario usuario = optionalUsuario.get();
 
-        if(!optionalUsuario.get().getPassword().equals(password)) {
+        if (!optionalUsuario.get().getPassword().equals(password)) {
             throw new RuntimeException("Error Codigo 104: Constraseña incorrecta");
         }
         return usuario;
     }
 
     @DeleteMapping("/eliminarUsuarios")
-    public ResponseEntity<String> eliminarUsuarios(){
-        if(usuarioRepository.count() == 0) {
+    public ResponseEntity<String> eliminarUsuarios() {
+        if (usuarioRepository.count() == 0) {
             return ResponseEntity.badRequest().body("La Base de Datos no tiene usuarios creados.");
         } else {
             usuarioRepository.deleteAll();
@@ -106,10 +102,10 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{email}")
-    public ResponseEntity<String> eliminarUsuarioId(@PathVariable String email){
+    public ResponseEntity<String> eliminarUsuarioId(@PathVariable String email) {
         Optional<Usuario> usuario = usuarioRepository.findById(email);
 
-        if(usuario.isEmpty()) {
+        if (usuario.isEmpty()) {
             return ResponseEntity.badRequest().body("El usuario no existe.");
         } else {
             usuarioRepository.deleteById(email);
@@ -117,4 +113,33 @@ public class UsuarioController {
         }
     }
 
+    @PutMapping("/{email}/{password}/{idEquipo}/apostar")
+    public void apostar(@PathVariable String email, @PathVariable String password, @PathVariable String idEquipo){
+        Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
+        if(optionalUsuario.isEmpty())
+            throw new RuntimeException("Usuario inexistente");
+
+        Usuario usuario = optionalUsuario.get();
+        if(usuario.getPassword().equals(password)){
+            Optional<Equipo> optionalEquipo = equipoRepository.findById(idEquipo);
+            if(optionalEquipo.isEmpty())
+                throw new RuntimeException("Equipo inexistente");
+
+            usuario.setIdEquipoApostado(idEquipo);
+            usuarioRepository.save(usuario);
+        }else{
+            throw new RuntimeException("Contraseña incorrecta");
+        }
+    }
+
+    @PutMapping("/actualizarPuntos")
+    public void darPuntos(@RequestBody Equipo equipoGanador){
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        usuarios.forEach(usuario -> {
+            if(usuario.idEquipoApostado.equals(equipoGanador.getNombre()))
+                usuario.setPuntaje(usuario.getPuntaje() + 10);
+        });
+
+        usuarioRepository.saveAll(usuarios);
+    }
 }
