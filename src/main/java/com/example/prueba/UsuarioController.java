@@ -15,7 +15,7 @@ public class UsuarioController {
     @Autowired
     UsuarioRepository usuarioRepository;
 
-    @GetMapping("/codigos")
+    @GetMapping("/codigosError")
     public List<String> codigosError(){
         List<String> errores = new ArrayList<>();
         errores.add("Error 101: Usuario ya existente");
