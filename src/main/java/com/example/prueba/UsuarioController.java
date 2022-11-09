@@ -20,8 +20,8 @@ public class UsuarioController {
         List<String> errores = new ArrayList<>();
         errores.add("Error 101: Usuario ya existente");
         errores.add("Error 102: Usuario no encontrado");
-        errores.add("Error 103: No se ha encontrado el rol 'rol1'");
-        errores.add("Error 104: La contraseña no coincide");
+        errores.add("Error 103: El usuario no contiene el ROL: 'x'");
+        errores.add("Error 104: Constraseña incorrecta");
         return errores;
     }
 
@@ -29,7 +29,7 @@ public class UsuarioController {
     public ResponseEntity<String> crear(@RequestBody Usuario usuario){
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(usuario.getEmail());
         if(optionalUsuario.isPresent()){
-            return ResponseEntity.badRequest().body("Error Codigo 101: Usuario ya existente");
+            return ResponseEntity.badRequest().body("Error 101: Usuario ya existente");
         }
         usuarioRepository.save(usuario);
         return ResponseEntity.ok("Usuario registrado con exito");
@@ -73,7 +73,7 @@ public class UsuarioController {
 
        for (String rol : eliminarRolDTO.getRoles())
             if (!usuario.getRoles().contains(rol))
-                return ResponseEntity.badRequest().body("103: El usuario no contiene el ROL: " + rol);
+                return ResponseEntity.badRequest().body("Error 103: El usuario no contiene el ROL: " + rol);
 
         usuario.getRoles().removeAll(eliminarRolDTO.getRoles());
         usuarioRepository.save(usuario);
@@ -84,13 +84,13 @@ public class UsuarioController {
     private Usuario getUsuario(String email, String password) throws RuntimeException{
         Optional<Usuario> optionalUsuario = usuarioRepository.findById(email);
         if(optionalUsuario.isEmpty()) {
-            throw new RuntimeException("Error Codigo 102: Usuario no encontrado");
+            throw new RuntimeException("Error 102: Usuario no encontrado");
         }
 
         Usuario usuario = optionalUsuario.get();
 
         if(!optionalUsuario.get().getPassword().equals(password)) {
-            throw new RuntimeException("Error Codigo 104: Constraseña incorrecta");
+            throw new RuntimeException("Error 104: Constraseña incorrecta");
         }
         return usuario;
     }
